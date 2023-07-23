@@ -76,7 +76,8 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
   };
 
   let textWithoutHTML = textAreaValue.replace(/(<([^>]+)>)/gi, "");
-  let wordCount = textWithoutHTML.split(/\s+/).length;
+  let wordsArray = textWithoutHTML.split(/\s+/).filter(Boolean);
+  let wordCount = wordsArray.length;
   const h1Check = /<h1>(\S*?)<\/h1>/i.exec(textAreaValue);
   const keywordInH1 =
     h1Check &&
@@ -735,7 +736,7 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
                 () => "red"
               )}
 
-          {keywordInFirstParagraph
+          {keywordInFirstParagraph && textWithoutHTML !== ""
             ? renderHelper(
                 true,
                 `Your first paragraph contains the keyword '${keyword}'.`,
@@ -743,7 +744,7 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
               )
             : renderHelper(
                 false,
-                `Your first paragraph does not contain the keyword '${keyword}'. Consider adding it for better SEO.`,
+                `Your first paragraph does not contain the focused keyword. Consider adding it for better SEO.`,
                 () => "red"
               )}
 
