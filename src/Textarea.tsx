@@ -31,9 +31,7 @@ const TextArea: React.FC<TextAreaProps> = ({ value, setValue }) => {
             "image",
             "anchor",
             "charmap",
-            "print",
             "preview",
-            "hr",
             "searchreplace",
             "wordcount",
             "visualblocks",
@@ -43,7 +41,6 @@ const TextArea: React.FC<TextAreaProps> = ({ value, setValue }) => {
             "insertdatetime",
             "media",
             "table",
-            "paste",
             "help",
           ],
           toolbar:
