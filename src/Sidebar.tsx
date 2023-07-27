@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { useSidebarUtils } from "./utils/sidebarUtils";
 import {
   TextField,
   List,
@@ -15,83 +16,57 @@ interface SideBarProps {
 }
 
 const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
-  const [activeMenu, setActiveMenu] = useState<string | null>("input");
-  const [keyword, setKeyword] = useState<string>("");
-  const [pageTitle, setPageTitle] = useState<string>("");
-  const [metaDescription, setMetaDescription] = useState<string>("");
-  const [titleHelperVisibility, setTitleHelperVisibility] =
-    useState<boolean>(false);
-  const [descriptionHelperVisibility, setDescriptionHelperVisibility] =
-    useState<boolean>(false);
+  // Properties from sidebarUtils
+  const {
+    activeMenu,
+    setActiveMenu,
+    keyword,
+    pageTitle,
+    metaDescription,
+    titleHelperVisibility,
+    setTitleHelperVisibility,
+    descriptionHelperVisibility,
+    setDescriptionHelperVisibility,
+    handleKeywordChange,
+    handlePageTitleChange,
+    handleMetaDescriptionChange,
+    handleTitleBlur,
+    handleDescriptionBlur,
+    calculateKeywordDensity,
+    checkImageNames,
+    checkImageAltText,
+    formatDescription,
+    formatTitle,
+  } = useSidebarUtils();
 
-  const handleKeywordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setKeyword(event.target.value);
-  };
-
-  const handlePageTitleChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPageTitle(event.target.value);
-  };
-
-  const handleMetaDescriptionChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setMetaDescription(event.target.value);
-  };
-
-  const handleTitleBlur = () => {
-    setTitleHelperVisibility(false);
-  };
-
-  const handleDescriptionBlur = () => {
-    setDescriptionHelperVisibility(false);
-  };
-
-  const calculateKeywordDensity = (content: string, keyword: string) => {
-    const words = content.split(" ").filter(Boolean);
-    const keywordMatches = words.filter(
-      (word) => word.toLowerCase() === keyword.toLowerCase()
-    ).length;
-
-    return (keywordMatches / words.length) * 100;
-  };
-
-  const checkImageNames = (content: string, keyword: string) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, "text/html");
-    const imageElements = Array.from(doc.getElementsByTagName("img"));
-
-    return imageElements.some((img) => new RegExp(keyword, "i").test(img.src));
-  };
-
-  const checkImageAltText = (content: string, keyword: string) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, "text/html");
-    const imageElements = Array.from(doc.getElementsByTagName("img"));
-
-    return imageElements.some((img) =>
-      new RegExp(`\\b${keyword}\\b`, "i").test(img.alt)
-    );
-  };
-
+  // Preprocessing of input and setting up of basic variables
   let textWithoutHTML = textAreaValue.replace(/(<([^>]+)>)/gi, "");
   let wordsArray = textWithoutHTML.split(/\s+/).filter(Boolean);
   let wordCount = wordsArray.length;
+
+  // Checking and processing h1 tags
   const h1Check = /<h1>(\S*?)<\/h1>/i.exec(textAreaValue);
   const keywordInH1 =
     h1Check &&
     new RegExp(`\\b${keyword.toLowerCase()}\\b`, "i").test(
       h1Check[1].toLowerCase()
     );
+
+  // Checking first paragraph for keyword
   const keywordInFirstParagraph = new RegExp(
     `<p[^>]*>\\s*${keyword.toLowerCase()}`
   ).test(textAreaValue.toLowerCase());
+
+  // Checking and processing img tags
   const imgCheck = /<\s*img/.test(textAreaValue);
   const imgAltRegex = checkImageAltText(textAreaValue, keyword);
-  const linkCheck = /<\s*a/.test(textAreaValue);
-  const keywordDensity = calculateKeywordDensity(textWithoutHTML, keyword);
   const keywordInImgName = checkImageNames(textAreaValue, keyword);
+
+  // Checking for links
+  const linkCheck = /<\s*a/.test(textAreaValue);
+
+  // Keyword density calculations
+  const keywordDensity = calculateKeywordDensity(textWithoutHTML, keyword);
   const desiredMinDensity = 1;
   const desiredMaxDensity = 2;
   const keywordOccurrences = (
@@ -100,69 +75,85 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
   const actualDensity = (keywordOccurrences / wordCount) * 100;
 
   const helper = {
+    // Keyword related properties
     keywordNotEmpty: keyword !== "",
     keywordInTitle:
       keyword !== "" && pageTitle.toLowerCase().includes(keyword.toLowerCase()),
     keywordAtBeginning:
       keyword !== "" &&
       pageTitle.toLowerCase().startsWith(keyword.toLowerCase()),
-    titleSufficient: pageTitle.length >= 30,
-    titleGreat: pageTitle.length >= 50,
-    titleTooLong: pageTitle.length > 60,
-    descriptionSufficient: metaDescription.length >= 50,
-    descriptionGreat: metaDescription.length > 100,
-    descriptionTooLong: metaDescription.length > 160,
     keywordInDescription:
       keyword !== "" &&
       metaDescription.toLowerCase().includes(keyword.toLowerCase()),
-    h1Exists: h1Check !== null,
     keywordInH1: keywordInH1,
-    textExists: textWithoutHTML !== "",
-    sufficientWordCount: wordCount >= 300,
     keywordInFirstParagraph: keywordInFirstParagraph,
-    optimalKeywordDensity: keywordDensity > 2,
-    imgExists: imgCheck,
     keywordInImgName: keywordInImgName,
     keywordInImgAlt: imgAltRegex,
+
+    // Title related properties
+    titleSufficient: pageTitle.length >= 30,
+    titleGreat: pageTitle.length >= 50,
+    titleTooLong: pageTitle.length > 60,
+
+    // Description related properties
+    descriptionSufficient: metaDescription.length >= 50,
+    descriptionGreat: metaDescription.length > 100,
+    descriptionTooLong: metaDescription.length > 160,
+
+    // Existence related properties
+    h1Exists: h1Check !== null,
+    textExists: textWithoutHTML !== "",
+    imgExists: imgCheck,
     linkExists: linkCheck,
+
+    // Other properties related to word count and density
+    sufficientWordCount: wordCount >= 300,
+    optimalKeywordDensity: keywordDensity < 2,
   };
 
+  // Description score calculation
   const calculateDescriptionScore = () => {
-    let score = 0;
-    if (helper.keywordNotEmpty) score += 25;
-    if (helper.keywordInDescription) score += 25;
+    let descriptionScore = 0;
+    if (helper.keywordNotEmpty) descriptionScore += 25;
+    if (helper.keywordInDescription) descriptionScore += 25;
     if (helper.descriptionSufficient) {
-      if (helper.descriptionGreat) score += 50;
-      else score += 25;
+      if (helper.descriptionGreat) descriptionScore += 50;
+      else descriptionScore += 25;
     }
-    return score;
+    return descriptionScore;
   };
 
+  // Title score calculation
   const calculateTitleScore = () => {
-    let score = 0;
-    if (helper.keywordInTitle) score += 25;
-    if (helper.keywordAtBeginning) score += 25;
+    let titleScore = 0;
+    if (helper.keywordInTitle) titleScore += 25;
+    if (helper.keywordAtBeginning) titleScore += 25;
     if (helper.titleSufficient) {
-      if (helper.titleGreat) score += 50;
-      else score += 25;
+      if (helper.titleGreat) titleScore += 50;
+      else titleScore += 25;
     }
-    return score;
+    return titleScore;
   };
 
+  // Content score calculation
   const calculateContentScore = () => {
-    let score = 0;
-    score += helper.h1Exists ? 10 : 0;
-    score += helper.keywordInH1 ? 15 : 0;
-    score += helper.textExists ? 5 : 0;
-    score += helper.sufficientWordCount ? 5 : 0;
-    score += helper.keywordInFirstParagraph ? 10 : 0;
-    score += helper.optimalKeywordDensity ? 15 : 0;
-    score += helper.imgExists ? 10 : 0;
-    score += helper.keywordInImgName ? 10 : 0;
-    score += helper.keywordInImgAlt ? 10 : 0;
-    score += helper.linkExists ? 10 : 0;
-    return score;
+    let contentScore = 0;
+
+    contentScore += helper.h1Exists ? 10 : 0;
+    contentScore += helper.keywordInH1 ? 15 : 0;
+    contentScore += helper.textExists ? 5 : 0;
+    contentScore += helper.sufficientWordCount ? 5 : 0;
+    contentScore += helper.keywordInFirstParagraph ? 10 : 0;
+    contentScore += helper.optimalKeywordDensity ? 15 : 0;
+    contentScore += helper.imgExists ? 10 : 0;
+    contentScore += helper.keywordInImgName ? 10 : 0;
+    contentScore += helper.keywordInImgAlt ? 10 : 0;
+    contentScore += helper.linkExists ? 10 : 0;
+
+    return contentScore;
   };
+
+  // Helper component for rendering UI elements in the Sidebar
   const renderHelper = (
     check: boolean,
     label: string,
@@ -184,38 +175,6 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
         <Typography variant="body2">{label}</Typography>
       </Box>
     );
-  };
-
-  const formatTitle = (title: string) => {
-    const maxLength = 60;
-    let trimmedTitle = title;
-
-    if (trimmedTitle.length > maxLength) {
-      while (trimmedTitle.length > maxLength) {
-        let words = trimmedTitle.split(" ");
-        words.pop();
-        trimmedTitle = words.join(" ");
-      }
-      trimmedTitle = trimmedTitle + "...";
-    }
-
-    return trimmedTitle;
-  };
-
-  const formatDescription = (description: string) => {
-    const maxLength = 158;
-    let trimmedDescription = description;
-
-    if (trimmedDescription.length > maxLength) {
-      while (trimmedDescription.length > maxLength) {
-        let words = trimmedDescription.split(" ");
-        words.pop();
-        trimmedDescription = words.join(" ");
-      }
-      trimmedDescription = trimmedDescription + "...";
-    }
-
-    return trimmedDescription;
   };
 
   const renderContent = () => {
@@ -527,7 +486,7 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
           </Box>
         </Box>
       );
-    } else if (activeMenu === "helper") {
+    } else if (activeMenu === "tips") {
       return (
         <Box
           sx={{
@@ -700,7 +659,7 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
                 () => "red"
               )}
 
-          {keywordInH1
+          {keywordInH1 && helper.keywordNotEmpty
             ? renderHelper(
                 true,
                 `The focus keyword '${keyword}' appears in the H1!`,
@@ -736,7 +695,9 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
                 () => "red"
               )}
 
-          {keywordInFirstParagraph && textWithoutHTML !== ""
+          {keywordInFirstParagraph &&
+          textWithoutHTML !== "" &&
+          helper.keywordNotEmpty
             ? renderHelper(
                 true,
                 `Your first paragraph contains the keyword '${keyword}'.`,
@@ -751,16 +712,16 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
           {imgCheck
             ? renderHelper(
                 true,
-                `Your text contains image tags, which is good for SEO.`,
+                `Your text contains image, which is good for SEO.`,
                 () => "green"
               )
             : renderHelper(
                 false,
-                `Your text does not contain any image tags. Consider adding some for better SEO.`,
+                `Your text does not contain any image. Consider adding some for better SEO.`,
                 () => "red"
               )}
 
-          {keywordInImgName
+          {helper.keywordInImgAlt && helper.keywordNotEmpty
             ? renderHelper(
                 true,
                 `Your images have alt attributes that contain the keyword '${keyword}', which is good for SEO.`,
@@ -784,39 +745,45 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
                 () => "red"
               )}
 
-          {wordCount > 0 &&
-          actualDensity >= desiredMinDensity &&
-          actualDensity <= desiredMaxDensity
-            ? renderHelper(
-                true,
-                `The keyword '${keyword}' is used ${keywordOccurrences} times, maintaining a keyword density of ${actualDensity.toFixed(
-                  2
-                )}%. This is within the optimal range of ${desiredMinDensity}% - ${desiredMaxDensity}%.`,
-                () => "green"
-              )
-            : wordCount > 0 && actualDensity < desiredMinDensity
-            ? renderHelper(
-                false,
-                `The keyword '${keyword}' is only used ${keywordOccurrences} times, resulting in a keyword density of ${actualDensity.toFixed(
-                  2
-                )}%. For better SEO, try to use it more frequently to reach the desired keyword density range of ${desiredMinDensity}% - ${desiredMaxDensity}%.`,
-                () => "red"
-              )
-            : wordCount > 0 && actualDensity > desiredMaxDensity
-            ? renderHelper(
-                false,
-                `The keyword '${keyword}' is used ${keywordOccurrences} times, resulting in a keyword density of ${actualDensity.toFixed(
-                  2
-                )}%. This is above the optimal range and could lead to keyword stuffing. Try to reduce the usage of the keyword to maintain a density within the range of ${desiredMinDensity}% - ${desiredMaxDensity}%.`,
-                () => "red"
-              )
-            : renderHelper(
-                false,
-                `There are no words in the text. Please add content.`,
-                () => "red"
-              )}
+          {helper.keywordNotEmpty ? (
+            <>
+              {wordCount > 0 &&
+              actualDensity >= desiredMinDensity &&
+              actualDensity <= desiredMaxDensity
+                ? renderHelper(
+                    true,
+                    `The keyword '${keyword}' is used ${keywordOccurrences} times, maintaining a keyword density of ${actualDensity.toFixed(
+                      2
+                    )}%. This is within the optimal range of ${desiredMinDensity}% - ${desiredMaxDensity}%.`,
+                    () => "green"
+                  )
+                : wordCount > 0 && actualDensity < desiredMinDensity
+                ? renderHelper(
+                    false,
+                    `The keyword '${keyword}' is only used ${keywordOccurrences} times, resulting in a keyword density of ${actualDensity.toFixed(
+                      2
+                    )}%. For better SEO, try to use it more frequently to reach the desired keyword density range of ${desiredMinDensity}% - ${desiredMaxDensity}%.`,
+                    () => "red"
+                  )
+                : wordCount > 0 && actualDensity > desiredMaxDensity
+                ? renderHelper(
+                    false,
+                    `The keyword '${keyword}' is used ${keywordOccurrences} times, resulting in a keyword density of ${actualDensity.toFixed(
+                      2
+                    )}%. This is above the optimal range and could lead to keyword stuffing. Try to reduce the usage of the keyword to maintain a density within the range of ${desiredMinDensity}% - ${desiredMaxDensity}%.`,
+                    () => "red"
+                  )
+                : renderHelper(
+                    false,
+                    "There are no words in the text. Please add content.",
+                    () => "red"
+                  )}
+            </>
+          ) : (
+            renderHelper(false, "No focus keyword has been set.", () => "red")
+          )}
 
-          {keywordInImgName
+          {keywordInImgName && helper.keywordNotEmpty
             ? renderHelper(
                 true,
                 `Your images' filenames contain the keyword '${keyword}', which is good for SEO.`,
@@ -852,8 +819,8 @@ const SideBar: React.FC<SideBarProps> = ({ textAreaValue }) => {
         </ListItem>
         <ListItem
           button
-          selected={activeMenu === "helper"}
-          onClick={() => setActiveMenu("helper")}
+          selected={activeMenu === "tips"}
+          onClick={() => setActiveMenu("tips")}
         >
           <ListItemText primary="SEO Optimization tips" />
         </ListItem>

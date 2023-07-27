@@ -1,68 +1,104 @@
 import React from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { Editor } from "@tinymce/tinymce-react";
 
 interface TextAreaProps {
   value: string;
   setValue: (val: string) => void;
 }
 
+declare const tinymce: any;
+
 const TextArea: React.FC<TextAreaProps> = ({ value, setValue }) => {
+  const handleEditorChange = (content: string, editor: any) => {
+    const bookmark = editor.selection.getBookmark(2, true);
+    setValue(content);
+    editor.selection.moveToBookmark(bookmark);
+  };
+
   return (
     <div className="Textarea">
-      <ReactQuill
-        theme="snow"
+      <Editor
+        apiKey="qgkkfgwqfxyafpvglh0m1nzsutyqzc33pi3200ogcq5czlud"
         value={value}
-        onChange={setValue}
-        placeholder="Enter your content here for analysis..."
-        modules={modules}
-        formats={formats}
+        init={{
+          menubar: true,
+          branding: false,
+          plugins: [
+            "advlist",
+            "autolink",
+            "lists",
+            "link",
+            "image",
+            "anchor",
+            "charmap",
+            "print",
+            "preview",
+            "hr",
+            "searchreplace",
+            "wordcount",
+            "visualblocks",
+            "visualchars",
+            "code",
+            "fullscreen",
+            "insertdatetime",
+            "media",
+            "table",
+            "paste",
+            "help",
+          ],
+          toolbar:
+            "undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | " +
+            "bullist numlist outdent indent | link image | code",
+          style_formats: [
+            {
+              title: "Headings",
+              items: [
+                { title: "Heading 1", format: "h1" },
+                { title: "Heading 2", format: "h2" },
+                { title: "Heading 3", format: "h3" },
+              ],
+            },
+          ],
+          image_advtab: true,
+          automatic_uploads: true,
+          file_picker_types: "image",
+          file_picker_callback: function (cb, value, meta) {
+            let input = document.createElement("input");
+            input.setAttribute("type", "file");
+            input.setAttribute("accept", "image/*");
+
+            input.onchange = function () {
+              const inputElement = this as HTMLInputElement;
+              const file =
+                inputElement.files && inputElement.files.length > 0
+                  ? inputElement.files[0]
+                  : null;
+
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = function () {
+                  const readerElement = this as FileReader;
+                  const id = "blobid" + new Date().getTime();
+                  const blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                  const base64 = readerElement.result
+                    ? (readerElement.result as string).split(",")[1]
+                    : "";
+                  const blobInfo = blobCache.create(id, file, base64);
+                  blobCache.add(blobInfo);
+                  cb(blobInfo.blobUri(), { title: file.name, alt: file.name });
+                };
+                reader.readAsDataURL(file);
+              }
+            };
+            input.click();
+          },
+          content_style:
+            "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+        }}
+        onEditorChange={handleEditorChange}
       />
     </div>
   );
 };
-
-// https://quilljs.com/docs/modules/  https://quilljs.com/docs/formats/
-const modules = {
-  toolbar: [
-    ["bold", "italic", "underline", "strike"],
-    ["blockquote", "code-block"],
-    [{ header: 1 }, { header: 2 }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ script: "sub" }, { script: "super" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-    [{ direction: "rtl" }],
-    [{ size: ["small", false, "large", "huge"] }],
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    [{ color: [] }, { background: [] }],
-    [{ font: [] }],
-    [{ align: [] }],
-    ["clean"],
-    ["link", "image", "video"],
-  ],
-};
-
-const formats = [
-  "header",
-  "font",
-  "size",
-  "color",
-  "background",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "blockquote",
-  "list",
-  "bullet",
-  "indent",
-  "script",
-  "align",
-  "direction",
-  "link",
-  "image",
-  "video",
-  "code-block",
-];
 
 export default TextArea;
