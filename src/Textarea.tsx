@@ -1,5 +1,6 @@
 import React from "react";
 import { Editor } from "@tinymce/tinymce-react";
+require("dotenv").config();
 
 interface TextAreaProps {
   value: string;
@@ -18,7 +19,7 @@ const TextArea: React.FC<TextAreaProps> = ({ value, setValue }) => {
   return (
     <div className="Textarea">
       <Editor
-        apiKey="qgkkfgwqfxyafpvglh0m1nzsutyqzc33pi3200ogcq5czlud"
+        apiKey={process.env.TINY_API}
         value={value}
         init={{
           menubar: true,
