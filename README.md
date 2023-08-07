@@ -1,46 +1,65 @@
-# Getting Started with Create React App
+# Description
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+SEO Content Analysis web application built with React and Typescript.
+Minimalistic and mobile-friendly design.
 
-## Available Scripts
+Live version: https://seo-content-checker.vercel.app/
 
-In the project directory, you can run:
+![SEO Content Analysis](https://img001.prntscr.com/file/img001/AIQ0jJ4-RHmCooNhxo66VA.png)
 
-### `npm start`
+1. Enter focused keyword;
+2. Enter Page Title;
+3. Enter Meta Description;
+4. Enter SEO Content;
+5. Navigate to SEO Optimization tips tab and make sure you score as high as possible:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+![SEO Optimization Tips tab](https://img001.prntscr.com/file/img001/vvWLovIrRmmiBhvGV3L_Dw.png)
+
+## Dependencies
+
+React: https://reactjs.org/<br />
+Material UI: https://mui.com/<br />
+TinyMCE Rich Text Editor: https://www.tiny.cloud/<br />
+Emotion: https://emotion.sh/docs/introduction<br />
+
+## Install
+
+1. Open terminal and enter the following command:
+
+```
+git clone https://github.com/EimantasVesialka/SEO-Content-checker.git
+```
+
+2. Change directory:
+
+```
+cd seo-content-checker
+```
+
+3. Install dependencies:
+
+```
+npm install
+```
+
+4. Make sure to change your Tiny API Key:
+
+```
+4.1. Open in browser: https://www.tiny.cloud/
+4.2. Sign up or Login
+4.3. When logged in, click on Cloud Dashboard, scroll to the bottom, copy your Tiny API Key
+4.4. Create .env file in main app directory
+4.5. Enter your Tiny API Key in .env file, as following: REACT_APP_TINY_API={TINY_API_KEY}
+```
+
+5. Run the app in development mode:
+
+```
+npm start
+```
+
+6. Open app in browser:
+   Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
